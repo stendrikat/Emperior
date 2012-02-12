@@ -27,6 +27,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -212,7 +213,9 @@ public class Main {
 
 	
 	public static File getTargetLocation(){
-		return new File(logDir + File.separator + System.currentTimeMillis());
+		SimpleDateFormat format = new SimpleDateFormat("dd-MM-yyyy HH-mm-ss");
+		String dateStr = format.format(new Date(System.currentTimeMillis()));
+		return new File(logDir + File.separator + dateStr);
 	}
 	
 	public static void removeTabbedPaneIcon(){
@@ -334,7 +337,7 @@ public class Main {
 		if(!logDir.exists())
 			logDir.mkdir();
 		
-		logDir = new File(logDir + File.separator + Main.tasks.get(Main.activeTask) + "_" + Main.tasktypes.get(Main.activeType));
+		logDir = new File(logDir + File.separator + Main.tasktypes.get(Main.activeType) + "_" + Main.tasks.get(Main.activeTask));
 		
 		if(!logDir.exists())
 			logDir.mkdir();
@@ -423,14 +426,17 @@ public class Main {
 //			String [] pathElements = filePath.split("\\\\|/");
 			String [] pathElements = filePath.split("\\\\");
 			
-			if(pathElements.length > 0){
-				targetLocation = new File(targetLocation + File.separator + filePath.substring(0, filePath.lastIndexOf(System.getProperty("file.separator"))));
-				targetLocation.mkdirs();
-			}
+//			if(pathElements.length > 0){
+//				System.out.println("[test] " + targetLocation + File.separator + filePath.substring(0, filePath.lastIndexOf(System.getProperty("file.separator"))));
+//				targetLocation = new File(targetLocation + File.separator + filePath.substring(0, filePath.lastIndexOf(System.getProperty("file.separator"))));
+//				targetLocation.mkdirs();
+//			}
 			
 			JEditorPane editor = mainFrame.editors.get(filePath);
 			
 			String copypath = targetLocation + File.separator + pathElements[pathElements.length-1];
+			
+			System.out.println("[test] " + copypath);
 			
 			Main.addLineToLogFile("[File] saving to: " + copypath);
 			

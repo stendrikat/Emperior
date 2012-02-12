@@ -810,6 +810,9 @@ public class MainFrame extends JFrame {
 		menu = null;
 		init();
 		
+		this.editors.clear();
+		this.openedFiles.clear();
+		
 		Main.addLineToLogFile("[Task] change task to: " + Main.tasks.get(Main.activeTask) + "_" + Main.tasktypes.get(Main.activeType));
 		Main.initLogging();
 	}
