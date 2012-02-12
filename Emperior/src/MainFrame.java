@@ -48,6 +48,7 @@ import javax.swing.JComponent;
 import javax.swing.JDialog;
 import javax.swing.JEditorPane;
 import javax.swing.JMenu;
+import javax.swing.JOptionPane;
 import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JToolBar;
@@ -787,34 +788,47 @@ public class MainFrame extends JFrame {
 	
 	private void nextTask(){
 		
-		this.saveAllFiles();
+		//Custom button text
+		Object[] options = {"Yes",
+		                    "No"};
+		int n = JOptionPane.showOptionDialog( null,
+	              "Are you sure you want to go to the next task?",      // Fragetext
+	              "Switch Task?",  // Titel
+	              JOptionPane.YES_NO_CANCEL_OPTION,
+	              JOptionPane.QUESTION_MESSAGE,  // Icon
+	              null, options,options[0] );
 		
-		jTabbedPane.removeAll();
+		if(n == 0){
 		
-		if(Main.activeTask == Main.tasks.size() - 1){
-			Main.activeTask = 0;
+			this.saveAllFiles();
+		
+			jTabbedPane.removeAll();
+		
+			if(Main.activeTask == Main.tasks.size() - 1){
+				Main.activeTask = 0;
 			
-			if(Main.activeType == Main.tasktypes.size() - 1)
-				Main.activeType = 0;
-			else
-				Main.activeType++;
+				if(Main.activeType == Main.tasktypes.size() - 1)
+					Main.activeType = 0;
+				else
+					Main.activeType++;
 			
-		}else {
-			Main.activeTask++;
+			}else {
+				Main.activeTask++;
+			}
+		
+		
+		
+			jTree = new FileTree(new File(Main.experimentFilesFolder + File.separator + Main.tasks.get(Main.activeTask) + "_" + Main.tasktypes.get(Main.activeType)));
+			mainPanel = null;
+			menu = null;
+			init();
+		
+			this.editors.clear();
+			this.openedFiles.clear();
+		
+			Main.addLineToLogFile("[Task] change task to: " + Main.tasks.get(Main.activeTask) + "_" + Main.tasktypes.get(Main.activeType));
+			Main.initLogging();
 		}
-		
-		
-		
-		jTree = new FileTree(new File(Main.experimentFilesFolder + File.separator + Main.tasks.get(Main.activeTask) + "_" + Main.tasktypes.get(Main.activeType)));
-		mainPanel = null;
-		menu = null;
-		init();
-		
-		this.editors.clear();
-		this.openedFiles.clear();
-		
-		Main.addLineToLogFile("[Task] change task to: " + Main.tasks.get(Main.activeTask) + "_" + Main.tasktypes.get(Main.activeType));
-		Main.initLogging();
 	}
 	
 } // @jve:decl-index=0:visual-constraint="10,10"
