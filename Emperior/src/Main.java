@@ -16,6 +16,7 @@
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -109,6 +110,7 @@ public class Main {
 		mainFrame.addWindowListener(new WindowAdapter() {
 			public void windowClosing(WindowEvent e) {
 				addLineToLogFile("[Close] Emperior");
+				updateResumeTask();
 				System.exit(0);
 			}
 		});
@@ -611,6 +613,21 @@ public class Main {
 		else
 			return false;
 		
+	}
+	
+	private static void updateResumeTask(){
+		Properties properties = new Properties(); 
+		try { 
+			BufferedInputStream stream = new BufferedInputStream(new FileInputStream("Emperior.properties"));
+			properties.load(stream);
+			properties.setProperty("resumetask", tasktypes.get(activeType) + "_" + tasks.get(activeTask));
+			BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream("Emperior.properties"));
+			properties.store(out, "");
+			out.close();
+			stream.close();
+		}catch(Exception e){
+			
+		}
 	}
 
 }
