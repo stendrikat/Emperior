@@ -70,6 +70,7 @@ public class Main {
 	public static int manualOrderPos = 0;
 	
 	
+	
 	public static void main(String[] args) throws Exception {
 		
 		mainFrame = new MainFrame();
@@ -158,6 +159,12 @@ public class Main {
 				manualOrder_arr_source = source.split(",");
 			}
 			
+			String resumetask = "";
+			
+			if(properties.getProperty("resumetask") != null){
+				resumetask = properties.getProperty("resumetask");
+			}
+			
 			handleCommands();
 			
 			if(manualOrder_arr_source != null){
@@ -180,16 +187,43 @@ public class Main {
 				if(tasks.size() != 0){
 					
 					if(manualOrder != null && manualOrder.size() != 0){
-						String[] name_parts = manualOrder.get(0).split("_");
+						
+						String[] name_parts;
+						
+						String firsttask = "";
+						
+						if(resumetask.trim().length() != 0){
+							//System.out.println(resumetask);
+							name_parts = resumetask.split("_");
+							firsttask = resumetask;
+							
+							manualOrderPos = manualOrder.indexOf(resumetask);
+						}else{
+							name_parts = manualOrder.get(0).split("_");
+							firsttask = manualOrder.get(0);
+							manualOrderPos = 0;
+						}
+						
 						
 						activeTask = tasks.indexOf(name_parts[1]);
 						activeType = tasktypes.indexOf(name_parts[0]);
-						manualOrderPos = 0;
+						
 						//System.out.println(activeTask + " " + activeType);
 						
-						mainFrame.setExperimentFilesFolderPath(experimentFilesFolder + File.separator + manualOrder.get(0));
+						mainFrame.setExperimentFilesFolderPath(experimentFilesFolder + File.separator + firsttask);
 					}else{
-						activeTask = 0;
+						
+						String[] name_parts;
+						
+						if(resumetask.trim().length() != 0){
+							name_parts = resumetask.split("_");
+							activeTask = tasks.indexOf(name_parts[1]);
+							activeType = tasktypes.indexOf(name_parts[0]);
+						}else{
+							activeTask = 0;
+						}
+						
+						
 						String newTask =  tasktypes.get(activeType) + "_" + tasks.get(activeTask);
 						mainFrame.setExperimentFilesFolderPath(experimentFilesFolder + File.separator + newTask);
 					}
