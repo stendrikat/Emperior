@@ -66,6 +66,8 @@ public class Main {
 	public static int activeTask;
 	public static List<String> tasks = new ArrayList<String>();
 	public static String experimentFilesFolder;
+	public static List<String> manualOrder = new ArrayList<String>();
+	public static int manualOrderPos = 0;
 	
 	
 	public static void main(String[] args) throws Exception {
@@ -130,6 +132,9 @@ public class Main {
 			BufferedInputStream stream = new BufferedInputStream(new FileInputStream("Emperior.properties"));
 			properties.load(stream);
 			stream.close();
+			
+			String[] manualOrder_arr_source = null;
+			
 			if(properties.getProperty("test") != null)
 				commandMap.put("test", properties.getProperty("test"));
 			if(properties.getProperty("run") != null)
@@ -148,8 +153,49 @@ public class Main {
 			}
 			if(properties.getProperty("startwithtype") != null)
 				activeType = Integer.parseInt(properties.getProperty("startwithtype"));
+			if(properties.getProperty("manualorder") != null){
+				String source = properties.getProperty("manualorder");
+				manualOrder_arr_source = source.split(",");
+			}
 			
 			handleCommands();
+			
+			if(manualOrder_arr_source != null){
+				boolean correctFormat = true;
+				
+				for(String s: manualOrder_arr_source){
+					correctFormat = checkManualOrderFormat(s);
+					
+					if(!correctFormat)
+						break;
+				}
+				
+				if(correctFormat){
+					for(String s: manualOrder_arr_source){
+						manualOrder.add(s);
+					}
+				}
+				
+				
+				if(tasks.size() != 0){
+					
+					if(manualOrder != null && manualOrder.size() != 0){
+						String[] name_parts = manualOrder.get(0).split("_");
+						
+						activeTask = tasks.indexOf(name_parts[1]);
+						activeType = tasktypes.indexOf(name_parts[0]);
+						manualOrderPos = 0;
+						//System.out.println(activeTask + " " + activeType);
+						
+						mainFrame.setExperimentFilesFolderPath(experimentFilesFolder + File.separator + manualOrder.get(0));
+					}else{
+						activeTask = 0;
+						String newTask =  tasktypes.get(activeType) + "_" + tasks.get(activeTask);
+						mainFrame.setExperimentFilesFolderPath(experimentFilesFolder + File.separator + newTask);
+					}
+				}
+			}
+			
 
 		} 
 		catch (IOException e) {} 
@@ -181,11 +227,7 @@ public class Main {
 				
 				discoverTasks(experimentFilesFolder);
 				
-				if(tasks.size() != 0){
-					activeTask = 0;
-					String newTask =  tasks.get(activeTask) + "_";
-					mainFrame.setExperimentFilesFolderPath(experimentFilesFolder + File.separator + newTask + tasktypes.get(activeType));
-				}
+				
 			}else
 				throw new Exception(experimentFilesFolder + " is not a folder");
 		}
@@ -500,12 +542,41 @@ public class Main {
 		
 		if(tasksFolder.isDirectory()){
 			for(File task : tasksFolder.listFiles()){
-				String taskname = task.getName().substring(0, task.getName().indexOf("_"));
+				String taskname = task.getName().substring(task.getName().indexOf("_") + 1);
 				if(!tasks.contains(taskname))
 					tasks.add(taskname);
 				
 			}
 		}
+	}
+	
+	private static boolean checkManualOrderFormat(String manualOrder){
+		
+		boolean correctTask = false;
+		boolean correctType = false;
+		
+		if(manualOrder.split("_").length != 2)
+			return false;
+		
+		for(String s : tasks){
+			if(manualOrder.contains(s)){
+				correctTask = true;
+				break;
+			}
+		}
+		
+		for(String s : tasktypes){
+			if(manualOrder.contains(s)){
+				correctType = true;
+				break;
+			}
+		}
+		
+		if(correctTask && correctType)
+			return true;
+		else
+			return false;
+		
 	}
 
 }

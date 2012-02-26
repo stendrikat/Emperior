@@ -804,21 +804,35 @@ public class MainFrame extends JFrame {
 		
 			jTabbedPane.removeAll();
 		
-			if(Main.activeTask == Main.tasks.size() - 1){
-				Main.activeTask = 0;
-			
-				if(Main.activeType == Main.tasktypes.size() - 1)
-					Main.activeType = 0;
+			if(Main.manualOrder != null && Main.manualOrder.size() != 0){
+				
+				if(Main.manualOrderPos == Main.manualOrder.size() - 1)
+					Main.manualOrderPos = 0;
 				else
-					Main.activeType++;
+					Main.manualOrderPos++;
+				
+				String[] name_parts = Main.manualOrder.get(Main.manualOrderPos).split("_");
+				
+				Main.activeTask = Main.tasks.indexOf(name_parts[1]);
+				Main.activeType = Main.tasktypes.indexOf(name_parts[0]);
+				
+			}else{
 			
-			}else {
-				Main.activeTask++;
+				if(Main.activeTask == Main.tasks.size() - 1){
+					Main.activeTask = 0;
+			
+					if(Main.activeType == Main.tasktypes.size() - 1)
+						Main.activeType = 0;
+					else
+						Main.activeType++;
+			
+				}else {
+					Main.activeTask++;
+				}
 			}
 		
 		
-		
-			jTree = new FileTree(new File(Main.experimentFilesFolder + File.separator + Main.tasks.get(Main.activeTask) + "_" + Main.tasktypes.get(Main.activeType)));
+			jTree = new FileTree(new File(Main.experimentFilesFolder + File.separator +  Main.tasktypes.get(Main.activeType) + "_" + Main.tasks.get(Main.activeTask)));
 			mainPanel = null;
 			menu = null;
 			init();
@@ -826,7 +840,7 @@ public class MainFrame extends JFrame {
 			this.editors.clear();
 			this.openedFiles.clear();
 		
-			Main.addLineToLogFile("[Task] change task to: " + Main.tasks.get(Main.activeTask) + "_" + Main.tasktypes.get(Main.activeType));
+			Main.addLineToLogFile("[Task] change task to: " + Main.tasktypes.get(Main.activeType) + "_" + Main.tasks.get(Main.activeTask));
 			Main.initLogging();
 		}
 	}
