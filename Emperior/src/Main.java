@@ -69,6 +69,7 @@ public class Main {
 	public static String experimentFilesFolder;
 	public static List<String> manualOrder = new ArrayList<String>();
 	public static int manualOrderPos = 0;
+	public static boolean adminmode = false;
 	
 	
 	
@@ -167,6 +168,10 @@ public class Main {
 				resumetask = properties.getProperty("resumetask");
 			}
 			
+			if(properties.getProperty("adminmode") != null){
+				adminmode = properties.getProperty("adminmode").equals("1");
+			}
+			
 			handleCommands();
 			
 			if(manualOrder_arr_source != null){
@@ -185,50 +190,53 @@ public class Main {
 					}
 				}
 				
-				
-				if(tasks.size() != 0){
+				if(!adminmode){
+					if(tasks.size() != 0){
 					
-					if(manualOrder != null && manualOrder.size() != 0){
+						if(manualOrder != null && manualOrder.size() != 0){
 						
-						String[] name_parts;
+							String[] name_parts;
 						
-						String firsttask = "";
+							String firsttask = "";
 						
-						if(resumetask.trim().length() != 0){
-							//System.out.println(resumetask);
-							name_parts = resumetask.split("_");
-							firsttask = resumetask;
+							if(resumetask.trim().length() != 0){
+								//System.out.println(resumetask);
+								name_parts = resumetask.split("_");
+								firsttask = resumetask;
 							
-							manualOrderPos = manualOrder.indexOf(resumetask);
-						}else{
-							name_parts = manualOrder.get(0).split("_");
-							firsttask = manualOrder.get(0);
-							manualOrderPos = 0;
-						}
+								manualOrderPos = manualOrder.indexOf(resumetask);
+							}else{
+								name_parts = manualOrder.get(0).split("_");
+								firsttask = manualOrder.get(0);
+								manualOrderPos = 0;
+							}
 						
 						
-						activeTask = tasks.indexOf(name_parts[1]);
-						activeType = tasktypes.indexOf(name_parts[0]);
-						
-						//System.out.println(activeTask + " " + activeType);
-						
-						mainFrame.setExperimentFilesFolderPath(experimentFilesFolder + File.separator + firsttask);
-					}else{
-						
-						String[] name_parts;
-						
-						if(resumetask.trim().length() != 0){
-							name_parts = resumetask.split("_");
 							activeTask = tasks.indexOf(name_parts[1]);
 							activeType = tasktypes.indexOf(name_parts[0]);
+						
+							//System.out.println(activeTask + " " + activeType);
+						
+							mainFrame.setExperimentFilesFolderPath(experimentFilesFolder + File.separator + firsttask);
 						}else{
-							activeTask = 0;
+						
+							String[] name_parts;
+						
+							if(resumetask.trim().length() != 0){
+								name_parts = resumetask.split("_");
+								activeTask = tasks.indexOf(name_parts[1]);
+								activeType = tasktypes.indexOf(name_parts[0]);
+							}else{
+								activeTask = 0;
+							}
+						
+						
+							String newTask =  tasktypes.get(activeType) + "_" + tasks.get(activeTask);
+							mainFrame.setExperimentFilesFolderPath(experimentFilesFolder + File.separator + newTask);
 						}
-						
-						
-						String newTask =  tasktypes.get(activeType) + "_" + tasks.get(activeTask);
-						mainFrame.setExperimentFilesFolderPath(experimentFilesFolder + File.separator + newTask);
 					}
+				}else{
+					mainFrame.setExperimentFilesFolderPath(experimentFilesFolder);
 				}
 			}
 			
@@ -384,15 +392,17 @@ public class Main {
 	}
 
 	public static void addLineToLogFile(String input) {
-		FileWriter fstream;
-		try {
-			fstream = new FileWriter(logFile, true);
-			BufferedWriter out = new BufferedWriter(fstream);
-			out.write(getCurrentTime() + " {" + applicant + "} " + "<" + Main.tasks.get(Main.activeTask) + "_" + Main.tasktypes.get(Main.activeType) + "> " + input);
-			out.newLine();
-			out.close();
-		} catch (IOException e) {
-			e.printStackTrace();
+		if(!adminmode){
+			FileWriter fstream;
+			try {
+				fstream = new FileWriter(logFile, true);
+				BufferedWriter out = new BufferedWriter(fstream);
+				out.write(getCurrentTime() + " {" + applicant + "} " + "<" + Main.tasks.get(Main.activeTask) + "_" + Main.tasktypes.get(Main.activeType) + "> " + input);
+				out.newLine();
+				out.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 		}
 	}
 
@@ -406,49 +416,50 @@ public class Main {
 
 	
 	public static void initLogging() {
-		logDir = new File("logs");
-		if(!logDir.exists())
-			logDir.mkdir();
-		
-		logDir = new File(logDir + File.separator + Main.applicant);
-		
-		if(!logDir.exists())
-			logDir.mkdir();
-		
-		logDir = new File(logDir + File.separator + Main.tasktypes.get(Main.activeType) + "_" + Main.tasks.get(Main.activeTask));
-		
-		if(!logDir.exists())
-			logDir.mkdir();
-		
-		logFile = new File(logDir + File.separator + "experiment.log");
-		File compilerOutputFile = new File(logDir + File.separator + "compileOutput.log");
-		try {
-			if(!compilerOutputFile.exists())
-				compilerOutputFile.createNewFile();
+		if(!adminmode){
+			logDir = new File("logs");
+			if(!logDir.exists())
+				logDir.mkdir();
 			
-			if (!logFile.exists())
-				logFile.createNewFile();
-			else {
-				double fileSizeInMB = (double) logFile.length() / (1024 * 1024);
-				if (fileSizeInMB >= 1) {
-					File newFile = new File(System.currentTimeMillis() + "_"
-							+ logFile.getName());
-					System.out.println(newFile.getAbsolutePath());
-					logFile.renameTo(newFile);
-					logFile = new File(logDir + File.separator + "experiment.log");
+			logDir = new File(logDir + File.separator + Main.applicant);
+			
+			if(!logDir.exists())
+				logDir.mkdir();
+			
+			logDir = new File(logDir + File.separator + Main.tasktypes.get(Main.activeType) + "_" + Main.tasks.get(Main.activeTask));
+			
+			if(!logDir.exists())
+				logDir.mkdir();
+			
+			logFile = new File(logDir + File.separator + "experiment.log");
+			File compilerOutputFile = new File(logDir + File.separator + "compileOutput.log");
+			try {
+				if(!compilerOutputFile.exists())
+					compilerOutputFile.createNewFile();
+				
+				if (!logFile.exists())
 					logFile.createNewFile();
+				else {
+					double fileSizeInMB = (double) logFile.length() / (1024 * 1024);
+					if (fileSizeInMB >= 1) {
+						File newFile = new File(System.currentTimeMillis() + "_"
+								+ logFile.getName());
+						System.out.println(newFile.getAbsolutePath());
+						logFile.renameTo(newFile);
+						logFile = new File(logDir + File.separator + "experiment.log");
+						logFile.createNewFile();
+
+					}
 
 				}
+				
+				
 
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
 			}
-			
-			
-
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
 		}
-
 	}
 	
 	public static void backupCompleteProject(){
@@ -616,17 +627,19 @@ public class Main {
 	}
 	
 	private static void updateResumeTask(){
-		Properties properties = new Properties(); 
-		try { 
-			BufferedInputStream stream = new BufferedInputStream(new FileInputStream("Emperior.properties"));
-			properties.load(stream);
-			properties.setProperty("resumetask", tasktypes.get(activeType) + "_" + tasks.get(activeTask));
-			BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream("Emperior.properties"));
-			properties.store(out, "");
-			out.close();
-			stream.close();
-		}catch(Exception e){
-			
+		if(!adminmode){
+			Properties properties = new Properties(); 
+			try { 
+				BufferedInputStream stream = new BufferedInputStream(new FileInputStream("Emperior.properties"));
+				properties.load(stream);
+				properties.setProperty("resumetask", tasktypes.get(activeType) + "_" + tasks.get(activeTask));
+				BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream("Emperior.properties"));
+				properties.store(out, "");
+				out.close();
+				stream.close();
+			}catch(Exception e){
+				
+			}
 		}
 	}
 

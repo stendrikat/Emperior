@@ -33,20 +33,25 @@ import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.HashMap;
+import java.util.Properties;
 import java.util.Set;
 import javax.swing.BorderFactory;
 import javax.swing.ImageIcon;
 import javax.swing.JComponent;
 import javax.swing.JDialog;
 import javax.swing.JEditorPane;
+import javax.swing.JFileChooser;
 import javax.swing.JMenu;
 import javax.swing.JOptionPane;
 import javax.swing.JScrollPane;
@@ -104,6 +109,15 @@ public class MainFrame extends JFrame {
 		this.setExtendedState(Frame.MAXIMIZED_BOTH);
 		setGlobalListeners();
 		setEditorContentTypes();
+		
+		if(Main.adminmode){
+			try{
+				String sourceCode = Main.readInFile("Emperior.properties");
+				setTabbedPanelItems("Emperior.properties", "Properties", sourceCode);
+			}catch(Exception e){
+				e.printStackTrace();
+			}
+		}
 	}
 
 	
@@ -134,6 +148,7 @@ public class MainFrame extends JFrame {
 	private void setEditorContentTypes() {
 		editorContentType.put("java", "text/java");
 		editorContentType.put("groovy", "text/groovy");
+		editorContentType.put("properties", "text/plain");
 	}
 
 	private void setGlobalListeners() {
@@ -204,12 +219,14 @@ public class MainFrame extends JFrame {
 			saveFile(filePath, editor.getText());
 			
 			jTabbedPane.setIconAt(selectedTab, null);
-					
-			try {
-				Main.copyFile(filePath, Main.getTargetLocation());
-			} catch (Exception e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+			
+			if(!Main.adminmode){
+				try {
+					Main.copyFile(filePath, Main.getTargetLocation());
+				} catch (Exception e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 			}
 		}
 
@@ -404,11 +421,13 @@ public class MainFrame extends JFrame {
 		int selectedTab = jTabbedPane.getSelectedIndex();
 		if(selectedTab!=-1){
 			String fileName = jTabbedPane.getToolTipTextAt(selectedTab);
-			Main.addLineToLogFile("[File] closing: " + fileName);
-			openedFiles.remove(fileName);
-			editors.remove(fileName);
-			jTabbedPane.remove(selectedTab);
-			undoManagers.remove(fileName);
+			if(!fileName.contains(".properties")){
+				Main.addLineToLogFile("[File] closing: " + fileName);
+				openedFiles.remove(fileName);
+				editors.remove(fileName);
+				jTabbedPane.remove(selectedTab);
+				undoManagers.remove(fileName);
+			}
 		}
 	}
 
@@ -553,6 +572,25 @@ public class MainFrame extends JFrame {
 		});
 				
 		jToolBar.add(nextTaskButton);
+		
+		if(Main.adminmode){
+			jToolBar.addSeparator();
+			
+			JButton exportButton = new JButton(new ImageIcon(getClass().getResource(
+			"/files/icons/export_project.png")));
+			exportButton.setToolTipText("Export Project");
+			exportButton.addActionListener(new ActionListener() {
+
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					exportProject();
+				}
+
+			});
+					
+			jToolBar.add(exportButton);
+		}
+		
 	}
 
 	
@@ -844,6 +882,86 @@ public class MainFrame extends JFrame {
 			Main.initLogging();
 		}
 	}
+	
+	private void exportProject(){
+		String path = getFileTree().getMainDir().getAbsolutePath();
+		path = path.replace("application", "");
+		
+		File mainDir = new File(path);
+		try {
+			
+			String prob = (String)JOptionPane.showInputDialog(
+                    null,
+                    "For which probant do you want to export?",
+                    "Probant Selection Dialog",
+                    JOptionPane.PLAIN_MESSAGE,
+                    null,
+                    null,
+                    "");
+			
+			System.out.println(prob);
+			
+			String starttype = (String)JOptionPane.showInputDialog(
+                    null,
+                    "Choose the starting type. Use the index of the type starting with 1",
+                    "Starting Type Selection Dialog",
+                    JOptionPane.PLAIN_MESSAGE,
+                    null,
+                    null,
+                    "");
+			
+			System.out.println(starttype);
+			
+			String manorder = (String)JOptionPane.showInputDialog(
+                    null,
+                    "Do you want to specify a manual order?",
+                    "Manual Order Selection Dialog",
+                    JOptionPane.PLAIN_MESSAGE,
+                    null,
+                    null,
+                    "");
+			
+			System.out.println(manorder);
+			
+			
+			if(prob == null)
+				prob = "";
+			if(starttype == null)
+				starttype = "";
+			if(manorder == null)
+				manorder = "";
+			
+			Properties properties = new Properties(); 
+			try { 
+				BufferedInputStream stream = new BufferedInputStream(new FileInputStream("Emperior.properties"));
+				properties.load(stream);
+				properties.setProperty("applicant", prob);
+				properties.setProperty("startwithtype", starttype);
+				properties.setProperty("resumetask", "");
+				properties.setProperty("manualorder", manorder);
+				BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream("Emperior.properties"));
+				properties.store(out, "");
+				out.close();
+				stream.close();
+			}catch(Exception e){
+				
+			}
+			
+			JFileChooser fc = new JFileChooser();
+			fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+			int returnVal = fc.showOpenDialog(null);
+			
+			if(returnVal == 0){
+				Main.copyDirectory(mainDir, fc.getSelectedFile());
+			}else{
+				consolePane.setText("Could not export.");
+			}
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+	
 	
 } // @jve:decl-index=0:visual-constraint="10,10"
 
