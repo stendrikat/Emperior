@@ -1,3 +1,4 @@
+package emperior.util;
 /*
  * Emperior
  * Copyright 2010 and beyond, Marvin Steinberg.
@@ -17,7 +18,10 @@ import java.io.InputStreamReader;
 
 import javax.swing.SwingUtilities;
 
-class ProcessOutput extends Thread
+import emperior.gui.ConsolePane;
+import emperior.gui.MainFrame;
+
+public class ProcessOutput extends Thread
 {
 
     private InputStreamReader output;

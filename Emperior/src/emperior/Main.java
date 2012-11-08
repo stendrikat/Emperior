@@ -1,3 +1,4 @@
+package emperior;
 /*
  * Emperior
  * Copyright 2010 and beyond, Marvin Steinberg.
@@ -41,6 +42,7 @@ import java.util.TimerTask;
 import java.util.TreeSet;
 
 import javax.swing.JEditorPane;
+import javax.swing.JOptionPane;
 import javax.swing.WindowConstants;
 
 import org.apache.commons.cli.BasicParser;
@@ -49,6 +51,9 @@ import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+
+import emperior.gui.FileTree;
+import emperior.gui.MainFrame;
  
 public class Main {
 
@@ -70,6 +75,10 @@ public class Main {
 	public static List<String> manualOrder = new ArrayList<String>();
 	public static int manualOrderPos = 0;
 	public static boolean adminmode = false;
+	public static boolean resuming = false;
+	public static String startedWith = "";
+	public static String admin_password = "admin";
+	public static String group = "";
 	
 	
 	
@@ -87,6 +96,7 @@ public class Main {
 		"Name of the Bat-File which is executed for Compilation and running the project");
 		options.addOption("f", "folder", true,
 		"Name of the Folder in which the exercises for the Experiment are stored");
+	
 		
 		CommandLine commandLine = parser.parse(options, args);
 		// read from command line
@@ -102,22 +112,30 @@ public class Main {
 		
 		checkBatFile();
 		
+		addLineToLogFile("[Start] Emperior");
 		
-
+		if(resuming)
+			Main.addLineToLogFile("[ResumeTask] Resume task: " + Main.tasktypes.get(Main.activeType) + "_" + Main.tasks.get(Main.activeTask));
+		else{
+			Main.addLineToLogFile("[StartTask] Start new task: " + Main.tasktypes.get(Main.activeType) + "_" + Main.tasks.get(Main.activeTask));
+			startedWith = Main.tasktypes.get(Main.activeType) + "_" + Main.tasks.get(Main.activeTask);
+			updateStartedWithTask(Main.tasktypes.get(Main.activeType) + "_" + Main.tasks.get(Main.activeTask));
+		}
 		mainFrame.init();     
 		
 		mainFrame.setSize(800, 600);
 		mainFrame.setVisible(true);
 		mainFrame.addWindowListener(new WindowAdapter() {
 			public void windowClosing(WindowEvent e) {
+				Main.addLineToLogFile("[PauseTask] Stop task: " + Main.tasktypes.get(Main.activeType) + "_" + Main.tasks.get(Main.activeTask));
 				addLineToLogFile("[Close] Emperior");
-				updateResumeTask();
+				updateResumeTask(tasktypes.get(activeType) + "_" + tasks.get(activeTask));
 				System.exit(0);
 			}
 		});
 		mainFrame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 		
-		addLineToLogFile("[Start] Emperior");
+		
 		//makeContiniousCopys();
 
 	}
@@ -166,10 +184,27 @@ public class Main {
 			
 			if(properties.getProperty("resumetask") != null){
 				resumetask = properties.getProperty("resumetask");
+				
+				if(resumetask.equals("finished")){
+					JOptionPane.showMessageDialog(null, "All tasks have been finished. If this is not the case Emperior has to be reset. Emperior is closing now.");
+					System.exit(0);
+				}
 			}
 			
 			if(properties.getProperty("adminmode") != null){
 				adminmode = properties.getProperty("adminmode").equals("1");
+			}
+			
+			if(properties.getProperty("adminpassword") != null){
+				admin_password = properties.getProperty("adminpassword");
+			}
+			
+			if(properties.getProperty("startedwith") != null){
+				startedWith = properties.getProperty("startedwith");
+			}
+			
+			if(properties.getProperty("group") != null){
+				group = properties.getProperty("group");
 			}
 			
 			handleCommands();
@@ -193,6 +228,8 @@ public class Main {
 				if(!adminmode){
 					if(tasks.size() != 0){
 					
+						testStartedWith();
+						
 						if(manualOrder != null && manualOrder.size() != 0){
 						
 							String[] name_parts;
@@ -205,10 +242,13 @@ public class Main {
 								firsttask = resumetask;
 							
 								manualOrderPos = manualOrder.indexOf(resumetask);
+								resuming = true;
+								
 							}else{
 								name_parts = manualOrder.get(0).split("_");
 								firsttask = manualOrder.get(0);
 								manualOrderPos = 0;
+								resuming = false;
 							}
 						
 						
@@ -216,7 +256,7 @@ public class Main {
 							activeType = tasktypes.indexOf(name_parts[0]);
 						
 							//System.out.println(activeTask + " " + activeType);
-						
+							
 							mainFrame.setExperimentFilesFolderPath(experimentFilesFolder + File.separator + firsttask);
 						}else{
 						
@@ -226,11 +266,16 @@ public class Main {
 								name_parts = resumetask.split("_");
 								activeTask = tasks.indexOf(name_parts[1]);
 								activeType = tasktypes.indexOf(name_parts[0]);
+								
+								resuming = true;
 							}else{
 								activeTask = 0;
+								activeType = 0;
+								resuming = false;
 							}
 						
-						
+							
+							
 							String newTask =  tasktypes.get(activeType) + "_" + tasks.get(activeTask);
 							mainFrame.setExperimentFilesFolderPath(experimentFilesFolder + File.separator + newTask);
 						}
@@ -238,6 +283,8 @@ public class Main {
 				}else{
 					mainFrame.setExperimentFilesFolderPath(experimentFilesFolder);
 				}
+				
+				
 			}
 			
 
@@ -397,7 +444,7 @@ public class Main {
 			try {
 				fstream = new FileWriter(logFile, true);
 				BufferedWriter out = new BufferedWriter(fstream);
-				out.write(getCurrentTime() + " {" + applicant + "} " + "<" + Main.tasks.get(Main.activeTask) + "_" + Main.tasktypes.get(Main.activeType) + "> " + input);
+				out.write(getCurrentTime() + " {" + applicant + " | " + group + "}"  + "<" + Main.tasktypes.get(Main.activeType) + "_" + Main.tasks.get(Main.activeTask) + "> " + input);
 				out.newLine();
 				out.close();
 			} catch (IOException e) {
@@ -626,13 +673,42 @@ public class Main {
 		
 	}
 	
-	private static void updateResumeTask(){
+	public static void updateResumeTask(String task){
 		if(!adminmode){
 			Properties properties = new Properties(); 
 			try { 
 				BufferedInputStream stream = new BufferedInputStream(new FileInputStream("Emperior.properties"));
 				properties.load(stream);
-				properties.setProperty("resumetask", tasktypes.get(activeType) + "_" + tasks.get(activeTask));
+				properties.setProperty("resumetask", task);
+				BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream("Emperior.properties"));
+				properties.store(out, "");
+				out.close();
+				stream.close();
+			}catch(Exception e){
+				
+			}
+		}
+	}
+	
+	private static void testStartedWith(){
+		String[] task_parts = startedWith.split("_");
+		
+		if(task_parts.length != 2){
+			startedWith = "";
+		}else if(!tasktypes.contains(task_parts[0])){
+			startedWith = "";
+		}else if(!tasks.contains(task_parts[1])){
+				startedWith = "";
+		}
+	}
+	
+	public static void updateStartedWithTask(String task){
+		if(!adminmode){
+			Properties properties = new Properties(); 
+			try { 
+				BufferedInputStream stream = new BufferedInputStream(new FileInputStream("Emperior.properties"));
+				properties.load(stream);
+				properties.setProperty("startedwith", task);
 				BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream("Emperior.properties"));
 				properties.store(out, "");
 				out.close();

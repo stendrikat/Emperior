@@ -1,3 +1,4 @@
+package emperior.dialog;
 /*
  * Emperior
  * Copyright 2010 and beyond, Marvin Steinberg.
@@ -11,6 +12,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Lesser General Public License for more details.
  */
+
 
 
 import javax.swing.JPanel;
@@ -41,6 +43,9 @@ import javax.swing.JButton;
 import javax.swing.JRadioButton;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+
+import emperior.Main;
+import emperior.gui.MainFrame;
 
 public class SearchDialog extends JDialog {
 

@@ -1,3 +1,4 @@
+package emperior.gui;
 /*
  * Emperior
  * Copyright 2010 and beyond, Marvin Steinberg.

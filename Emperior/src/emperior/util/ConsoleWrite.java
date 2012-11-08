@@ -1,3 +1,6 @@
+package emperior.util;
+import emperior.gui.ConsolePane;
+
 /*
  * Emperior
  * Copyright 2010 and beyond, Marvin Steinberg.

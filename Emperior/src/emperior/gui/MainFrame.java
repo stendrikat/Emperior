@@ -1,3 +1,4 @@
+package emperior.gui;
 /*
  * Emperior
  * Copyright 2010 and beyond, Marvin Steinberg.
@@ -11,6 +12,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Lesser General Public License for more details.
  */
+
 
 
 
@@ -69,6 +71,10 @@ import javax.swing.undo.UndoManager;
 import jsyntaxpane.DefaultSyntaxKit;
 import javax.swing.JTextPane;
 
+import emperior.Main;
+import emperior.dialog.SearchDialog;
+import emperior.util.ProcessOutput;
+
 public class MainFrame extends JFrame {
 
 	private static final long serialVersionUID = 1L;
@@ -76,9 +82,9 @@ public class MainFrame extends JFrame {
 	public static FileTree jTree = null;
 	private JMenuBar menu = null;
 	public static JTabbedPane jTabbedPane = null;
-	static HashMap<String, Boolean> openedFiles = new HashMap<String, Boolean>(); // @jve:decl-index=0:
-	static HashMap<String, JEditorPane> editors = new HashMap<String, JEditorPane>();
-	static HashMap<String, UndoManager> undoManagers = new HashMap<String, UndoManager>();
+	public static HashMap<String, Boolean> openedFiles = new HashMap<String, Boolean>(); // @jve:decl-index=0:
+	public static HashMap<String, JEditorPane> editors = new HashMap<String, JEditorPane>();
+	public static HashMap<String, UndoManager> undoManagers = new HashMap<String, UndoManager>();
 	private JToolBar jToolBar = null;
 	private JTextPane jConsoleTextPane = null;
 	private JScrollPane jConsoleScrollPane = null;
@@ -651,7 +657,7 @@ public class MainFrame extends JFrame {
 			pauseResumeButton.setIcon(new ImageIcon(getClass().getResource(
 					"/files/icons/pause-icon.png")));
 			setStatusForComponents(true);
-			Main.addLineToLogFile("[Resume] Emperior");
+			Main.addLineToLogFile("[ResumeTask] Resume task: " + Main.tasktypes.get(Main.activeType) + "_" + Main.tasks.get(Main.activeTask));
 
 		}
 		// pause
@@ -660,7 +666,7 @@ public class MainFrame extends JFrame {
 			pauseResumeButton.setIcon(new ImageIcon(getClass().getResource(
 					"/files/icons/resume-icon.png")));
 			setStatusForComponents(false);
-			Main.addLineToLogFile("[Pause] Emperior");
+			Main.addLineToLogFile("[PauseTask] Pause task: " + Main.tasktypes.get(Main.activeType) + "_" + Main.tasks.get(Main.activeTask));
 		}
 
 	}
@@ -826,14 +832,13 @@ public class MainFrame extends JFrame {
 	
 	private void nextTask(){
 		
-		//Custom button text
 		Object[] options = {"Yes",
 		                    "No"};
 		int n = JOptionPane.showOptionDialog( null,
-	              "Are you sure you want to go to the next task?",      // Fragetext
-	              "Switch Task?",  // Titel
+	              "Are you sure you want to go to the next task?",
+	              "Switch Task?",
 	              JOptionPane.YES_NO_CANCEL_OPTION,
-	              JOptionPane.QUESTION_MESSAGE,  // Icon
+	              JOptionPane.QUESTION_MESSAGE,
 	              null, options,options[0] );
 		
 		if(n == 0){
@@ -842,6 +847,8 @@ public class MainFrame extends JFrame {
 		
 			jTabbedPane.removeAll();
 		
+			Main.addLineToLogFile("[CloseTask] close task: " + Main.tasktypes.get(Main.activeType) + "_" + Main.tasks.get(Main.activeTask));
+			
 			if(Main.manualOrder != null && Main.manualOrder.size() != 0){
 				
 				if(Main.manualOrderPos == Main.manualOrder.size() - 1)
@@ -869,6 +876,18 @@ public class MainFrame extends JFrame {
 				}
 			}
 		
+			String[] started_task = Main.startedWith.split("_");
+			
+			if(Main.tasktypes.get(Main.activeType).equals(started_task[0]) && 
+					Main.tasks.get(Main.activeTask).equals(started_task[1])){
+				
+				JOptionPane.showMessageDialog(null, "You finished all tasks. Thanks for participating. Emperior will be closed now.");
+				
+				Main.updateResumeTask("finished");
+				
+				Main.addLineToLogFile("[Close] Emperior");
+				System.exit(0);
+			}
 		
 			jTree = new FileTree(new File(Main.experimentFilesFolder + File.separator +  Main.tasktypes.get(Main.activeType) + "_" + Main.tasks.get(Main.activeTask)));
 			mainPanel = null;
@@ -878,8 +897,10 @@ public class MainFrame extends JFrame {
 			this.editors.clear();
 			this.openedFiles.clear();
 		
+			
 			Main.addLineToLogFile("[Task] change task to: " + Main.tasktypes.get(Main.activeType) + "_" + Main.tasks.get(Main.activeTask));
 			Main.initLogging();
+			Main.addLineToLogFile("[StartTask] Start new Task: " + Main.tasktypes.get(Main.activeType) + "_" + Main.tasks.get(Main.activeTask));
 		}
 	}
 	
@@ -903,7 +924,7 @@ public class MainFrame extends JFrame {
 			
 			String starttype = (String)JOptionPane.showInputDialog(
                     null,
-                    "Choose the starting type. Use the index of the type starting with 1",
+                    "Choose the starting type. Use the index of the type starting with 0",
                     "Starting Type Selection Dialog",
                     JOptionPane.PLAIN_MESSAGE,
                     null,

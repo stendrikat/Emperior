@@ -1,3 +1,4 @@
+package emperior.gui;
 /*
  * Copyright (c) Ian F. Darwin, http://www.darwinsys.com/, 1996-2002.
  * All rights reserved. Software written by Ian F. Darwin and others.
@@ -33,6 +34,7 @@
  * inventing predecessor languages C and C++ is also gratefully acknowledged.
  */
  
+
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.io.BufferedReader;
@@ -49,6 +51,8 @@ import javax.swing.JTree;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
 import javax.swing.tree.DefaultMutableTreeNode;
+
+import emperior.Main;
 
 /**
  * Display a file system in a JTree view
